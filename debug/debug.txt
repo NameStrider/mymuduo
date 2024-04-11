@@ -1,0 +1,19 @@
+①如果声明函数忘记加括号编译器会认为在声明变量提示 expected ";"
+②宏定义以换行表示结束，如果宏定义不止一行需要加上 \ ，但在最后一行不能加否则编译器不知道宏定义什么时候结束
+③宏定义有多行的话最好包含在 do{}while() 中
+④宏 __FUNCTION__ 用于获取当前函数名返回一个字符串
+⑤注意 size_t 向 int 的转换，如果不转换编译器认为有风险，需要类型强转
+⑥打印输出时参数遗漏，格式不匹配
+⑦ static member function cannot have cv-qualifier
+⑧这个修改后的代码中，m_cond 的构造函数不再直接传入 m_mutex，而是单独构造一个 std::condition_variable 对象，以满足其构造函数的需求。
+   在构造 std::condition_variable 对象时，应该使用 std::condition_variable 的默认构造函数，而在条件变量等待和通知时，再配合相应的 std::mutex 使用
+⑨std::atomic_int32_t m_numCreated = 0; use of deleted function ‘std::atomic<int>::atomic(const std::atomic<int>&)，拷贝构造函数被禁止，
+    应该使用默认构造函数
+⑩静态数据成员必须初始化，否则链接的时候会提示未定义，reference undefined
+   如果将构造函数声明成私有需要给出其定义链接的时候会提示未定义，reference undefined
+   链接动态库的时候需要用 -L 和 -I 指定库路径和头文件路径；执行程序的时候需要设置环境变量 export LD_LIBRARY_PATH=path:$ LD_LIBRARY_PATH
+11.在函数 void EpollPoller::update(int operation, Channel* channel) 中，注册epoll 时 event.events = channel->events(); event.data.ptr = channel;
+     不能再加上 event.data.fd = channel->fd(); 因为 epoll_event.data 是一个 union，即一个地址下的数据有不同的变量名，同一时刻下只能有一个生效，
+     如果加上会修改 event.data.ptr 的值，导致在函数 TimeStamp EpollPoller::poll(int timeoutMs, ChannelList* activeChannel) 中执行 
+     Channel* channel = static_cast<Channel*>(m_events[i].data.ptr); channel->set_revents(m_events[i].events); 时会得到无效地址。访问无效地址
+     会导致"段错误"
